@@ -1,0 +1,13 @@
+#include <stdio.h>
+
+int main (){
+  int x = 64;
+  int z=0;
+  z |= 1 << 3;
+  printf("%d \n", z);
+  int i;
+  for(i=0; i<32; i++)
+    printf("%d"  );
+  
+  return 0;
+}

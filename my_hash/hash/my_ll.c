@@ -4,12 +4,13 @@
 #include "utlist.h"
 
 #define BUFLEN 20
-
+//contains one name, next and prev pointers
 typedef struct el {
   char bname[BUFLEN];
   struct el *next, *prev;
 } el;
 
+//how to compare names
 int namecmp(el *a, el *b) {
   return strcmp(a->bname,b->bname);
 }
