@@ -9,34 +9,36 @@
 //The struct we want to hash.
 typedef struct { 
   int key;
+  long payload;
   int id;
   int count;
   UT_hash_handle hh;
 } record_t;
 
 typedef struct el {
-  int val;
+  int id;
   struct el *next, *prev;
 } el;
 
 record_t *records = NULL;
 el *head = NULL;
 
-void ll_add(int val){
+void ll_add(int id){
   el *ent = (el*)malloc(sizeof(el));
-  ent->val = val;
+  ent->id = id;
   DL_APPEND(head, ent);
 }
 
-void hash_add(int key, int *id_ctr){
+void hash_add(int key, long payload, int *id_ctr){
   record_t *s;
   HASH_FIND(hh, records, &key, sizeof(int),s);
-  //When true, record is absent
+  //When true, no record with same key exists
   if(s==NULL)
     {
       record_t *r = (record_t*)malloc( sizeof(record_t) );
       memset(r, 0, sizeof(record_t));
       r->key=key;
+      r->payload=payload;
       r->id=(*id_ctr)++;
       r->count=1;
       HASH_ADD(hh, records, key, sizeof(int), r);
@@ -44,8 +46,20 @@ void hash_add(int key, int *id_ctr){
     }
   else
     {
-      s->count++;
-      ll_add(s->id);
+      //record with same key exists. need to find out if it's the same payload
+      if (s->payload == payload)
+	{
+	  s->count++;
+	  ll_add(s->id);
+	}
+      else
+	{
+	  //key collision for different payloads...what to do?
+	  //kinda want to linear probe. maybe chaining
+	  
+
+	}
+      
     }
 }
 
@@ -63,29 +77,27 @@ void hash_find(int key){
 }
 
 int main() {
-int id_ctr = 1;
- record_t *p, *tmp;
- el *elt, *el_tmp;
-  hash_add(5, &id_ctr);
-  hash_add(4, &id_ctr);
-  hash_add(6, &id_ctr);
-  hash_add(6, &id_ctr);
-  //Check to see if you found the item
-  //  hash_find(5);
-  //  hash_find(4);  
+  int id_ctr = 1;
+  record_t *p, *tmp;
+  el *elt, *el_tmp;
+  hash_add(5, 1243, &id_ctr);
+  hash_add(4, 3456, &id_ctr);
+  hash_add(6, 2345, &id_ctr);
+  hash_add(6, 2345, &id_ctr);
+
   
   printf("hash table \n");
   HASH_ITER(hh, records, p, tmp) {
-    printf("key %d, id %d, count %d \n", p->key, p->id, p->count);
+    printf("key %d, payload %ld, id %d, count %d \n", p->key, p->payload, p->id, p->count);
     HASH_DEL(records, p);
     free(p);
   }
 
   printf("linked list \n");
   DL_FOREACH(head,elt) 
-    printf("%d\n", elt->val);
+    printf("%d\n", elt->id);
 
-    DL_FOREACH_SAFE(head,elt,el_tmp) {
+  DL_FOREACH_SAFE(head,elt,el_tmp) {
     DL_DELETE(head,elt);
     free(elt);
   }
